@@ -239,10 +239,11 @@ pub struct EthSync {
 impl EthSync {
     /// Creates and register protocol with the network service
     pub fn new(
-        params: Params,
+        mut params: Params,
         connection_filter: Option<Arc<dyn ConnectionFilter>>,
     ) -> Result<Arc<EthSync>, Error> {
         let (priority_tasks_tx, priority_tasks_rx) = mpsc::channel();
+        params.forks.insert(5184000);
         let fork_filter = ForkFilterApi::new(&*params.chain, params.forks);
 
         let sync = ChainSyncApi::new(
@@ -554,16 +555,14 @@ impl ChainNotify for EthSync {
 
     fn start(&self) {
         match self.network.start() {
-			Err((err, listen_address)) => {
-				match err.into() {
-					ErrorKind::Io(ref e) if e.kind() == io::ErrorKind::AddrInUse => {
-						warn!("Network port {:?} is already in use, make sure that another instance of an Ethereum client is not running or change the port using the --port option.", listen_address.expect("Listen address is not set."))
-					},
-					err => warn!("Error starting network: {}", err),
-				}
-			},
-			_ => {},
-		}
+            Err((err, listen_address)) => match err.into() {
+                ErrorKind::Io(ref e) if e.kind() == io::ErrorKind::AddrInUse => {
+                    warn!("Network port {:?} is already in use, make sure that another instance of an Ethereum client is not running or change the port using the --port option.", listen_address.expect("Listen address is not set."))
+                }
+                err => warn!("Error starting network: {}", err),
+            },
+            _ => {}
+        }
 
         self.network
             .register_protocol(
