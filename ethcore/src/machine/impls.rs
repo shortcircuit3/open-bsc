@@ -253,6 +253,27 @@ impl EthereumMachine {
             }
         }
 
+        if block.header.number() == 5184000 {
+            let state = block.state_mut();
+
+            for (addr, code) in &[
+                (
+                    hex_literal::hex!("0000000000000000000000000000000000001008").into(),
+                    super::bsc_consts::TOKEN_MANAGER_CONTRACT.to_vec(),
+                ),
+                (
+                    hex_literal::hex!("0000000000000000000000000000000000001004").into(),
+                    super::bsc_consts::TOKEN_HUB_CONTRACT.to_vec(),
+                ),
+                (
+                    hex_literal::hex!("0000000000000000000000000000000000001005").into(),
+                    super::bsc_consts::RELAYER_INCENTIVIZE_CONTRACT.to_vec(),
+                ),
+            ] {
+                state.reset_code(addr, code.clone())?;
+            }
+        }
+
         Ok(())
     }
 

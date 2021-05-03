@@ -34,6 +34,7 @@ extern crate ethjson;
 extern crate ethkey;
 extern crate hash_db;
 extern crate heapsize;
+extern crate hex_literal;
 extern crate itertools;
 extern crate journaldb;
 extern crate keccak_hash as hash;
