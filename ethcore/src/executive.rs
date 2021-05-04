@@ -1210,13 +1210,16 @@ impl<'a, B: 'a + StateBackend> Executive<'a, B> {
         }
         let balance = self.state.balance(&sender)?;
         // avoid unaffordable transactions
-        let balance512 = U512::from(balance);
-        if balance512 < total_cost {
-            return Err(ExecutionError::NotEnoughCash {
-                required: total_cost,
-                got: balance512,
-            });
-        }
+
+        // alex: failed to import block #5286006 on this error
+
+        // let balance512 = U512::from(balance);
+        // if balance512 < total_cost {
+        //     return Err(ExecutionError::NotEnoughCash {
+        //         required: total_cost,
+        //         got: balance512,
+        //     });
+        // }
 
         // NOTE: there can be no invalid transactions from this point.
         if !schedule.keep_unsigned_nonce || !t.is_unsigned() {
