@@ -21,7 +21,7 @@ use engines::{
     self,
     parlia::{util, util::is_system_transaction},
 };
-use ethereum_types::{Address, H256, U256};
+use ethereum_types::{Address, H256, U256, U512};
 use evm::{CallType, FinalizationResult, Finalize};
 use executed::ExecutionError;
 pub use executed::{Executed, ExecutionResult};
@@ -1188,9 +1188,9 @@ impl<'a, B: 'a + StateBackend> Executive<'a, B> {
         }
 
         // TODO: we might need bigints here, or at least check overflows.
-        // let balance = self.state.balance(&sender)?;
+        let balance = self.state.balance(&sender)?;
         let gas_cost = t.gas.full_mul(t.gas_price);
-        // let total_cost = U512::from(t.value) + gas_cost;
+        let total_cost = U512::from(t.value) + gas_cost;
 
         let mut substate = Substate::new();
 
@@ -1208,15 +1208,16 @@ impl<'a, B: 'a + StateBackend> Executive<'a, B> {
                     .unwrap();
             }
         }
-        // let balance = self.state.balance(&sender)?;
-        // // avoid unaffordable transactions
-        // let balance512 = U512::from(balance);
-        // if balance512 < total_cost {
-        //     return Err(ExecutionError::NotEnoughCash {
-        //         required: total_cost,
-        //         got: balance512,
-        //     });
-        // }
+
+        // avoid unaffordable transactions
+        let balance512 = U512::from(balance);
+        if balance512 < total_cost {
+            println!("PRINT FAILED HASH: {}", t.hash());
+            return Err(ExecutionError::NotEnoughCash {
+                required: total_cost,
+                got: balance512,
+            });
+        }
 
         // NOTE: there can be no invalid transactions from this point.
         if !schedule.keep_unsigned_nonce || !t.is_unsigned() {
